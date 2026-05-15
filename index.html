@@ -123,7 +123,7 @@
   .compactCard .modeCardHead{ align-items:center; }
   .plot-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
   .plot-title{ font-weight:700; font-size:13px; }
-  #plotSvg{ width:100%; height:auto; aspect-ratio:760 / 330; display:block; border-radius:12px; border:1px solid var(--line2); background:#fff; }
+  #plotSvg{ width:100%; height:auto; aspect-ratio:760 / 430; display:block; border-radius:12px; border:1px solid var(--line2); background:#fff; }
   .legend{ margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; }
   .legitem{ display:flex; align-items:center; gap:6px; font-size:11px; border:1px solid var(--line2); background:rgba(15,23,42,0.02); border-radius:999px; padding:3px 8px; cursor:pointer; }
   .legitem.active{ outline:2px solid rgba(37,99,235,0.45); outline-offset:1px; }
@@ -395,7 +395,7 @@
           <button id="btnPng">Export PNG</button>
         </div>
       </div>
-      <svg id="plotSvg" viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hysteresis curve plot"></svg>
+      <svg id="plotSvg" viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hysteresis curve plot"></svg>
       <div class="legend" id="legend"></div>
       <div class="statusLine" id="curveStackStatus">Primary curve follows the selected model.</div>
     </div>
@@ -608,7 +608,7 @@ async function loadChunk(preferredCase=null){
   const seq = ++app.loadSeq;
   if (!app.chunkCache.has(path)){
     el.chunkStatus.textContent = `Loading ${profile}, ${grade}, 2L/h = ${span}...`;
-    const response = await fetch(`${path}?v=20260515_compact_v1`);
+    const response = await fetch(`${path}?v=20260515_plot_taller_v1`);
     if (!response.ok) throw new Error(`Could not load ${path}`);
     app.chunkCache.set(path, await response.json());
   }
@@ -917,8 +917,8 @@ function renderPlot(){
   clearSvg();
   const r = app.selected;
   if (!r) return;
-  const W = 760, H = 330;
-  const margin = {left:72, right:24, top:18, bottom:44};
+  const W = 760, H = 430;
+  const margin = {left:72, right:24, top:22, bottom:52};
   const innerW = W - margin.left - margin.right;
   const innerH = H - margin.top - margin.bottom;
   const records = [{rec:r, role:'selected', modelIndex:0}, ...app.addedCurves.map((rec, i) => ({rec, role:'added', modelIndex:i + 1}))];
@@ -1131,7 +1131,7 @@ function showError(err){
 
 async function init(){
   try{
-    const response = await fetch('data/manifest.json?v=20260515_compact_v1');
+    const response = await fetch('data/manifest.json?v=20260515_plot_taller_v1');
     if (!response.ok) throw new Error('Could not load data/manifest.json');
     app.manifest = await response.json();
     initControls();
