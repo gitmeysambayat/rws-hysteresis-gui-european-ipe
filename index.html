@@ -54,7 +54,7 @@
   main{
     padding:9px;
     display:grid;
-    grid-template-columns: clamp(390px, 22vw, 440px) minmax(0,1fr);
+    grid-template-columns: clamp(520px, 29vw, 560px) minmax(0,1fr);
     gap:10px;
     align-items:start;
   }
@@ -75,6 +75,8 @@
     padding:10px;
     margin-bottom:8px;
   }
+  main > section:first-child .card{ padding:8px 10px; margin-bottom:7px; }
+  main > section:first-child h2{ margin-bottom:6px; }
   h2{
     margin:0 0 8px 0;
     font-size:11.5px;
@@ -84,11 +86,14 @@
   }
   h2.case-sensitive{ text-transform:none; }
   .control{ margin-bottom:7px; }
+  main > section:first-child .control{ margin-bottom:4px; }
   .control-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
   .label{ font-size:10.8px; color:var(--muted); }
   .value{ font-size:11px; font-weight:700; }
   input[type="range"]{ width:100%; margin-top:4px; accent-color:var(--accent); }
+  main > section:first-child input[type="range"]{ margin-top:1px; }
   .range-foot{ display:flex; justify-content:space-between; margin-top:2px; font-size:10px; color:var(--muted); }
+  main > section:first-child .range-foot{ margin-top:0; font-size:9.5px; }
   select{
     width:100%;
     border:1px solid var(--line);
@@ -111,6 +116,7 @@
   button.primary{ background:linear-gradient(180deg,rgba(37,99,235,1),rgba(29,78,216,1)); color:#fff; border-color:rgba(29,78,216,1); }
   .btnbar{ display:flex; gap:8px; flex-wrap:wrap; }
   .btnrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  #feCaseCard .case-actions{ margin-top:5px !important; gap:8px; }
   .seg{ display:flex; gap:6px; flex-wrap:wrap; }
   .seg button.active{ background:#0f172a; color:#fff; border-color:#0f172a; }
   .modeCardHead{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
@@ -123,6 +129,7 @@
   .legitem.active{ outline:2px solid rgba(37,99,235,0.45); outline-offset:1px; }
   .swatch{ width:10px; height:10px; border-radius:2px; }
   .small{ font-size:11px; }
+  #feCaseCard .small{ font-size:10px; }
   .muted{ color:var(--muted); }
   .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; }
   .badge{ display:inline-block; padding:2px 8px; border-radius:999px; font-weight:700; font-size:10px; border:1px solid var(--line2); }
@@ -131,6 +138,7 @@
   .badge.warn{ background:rgba(245,158,11,0.10); color:#92400e; border-color:rgba(245,158,11,0.28); }
   .row{ display:flex; justify-content:space-between; gap:12px; align-items:baseline; }
   .divider{ height:1px; background:var(--line2); margin:10px 0; }
+  #feCaseCard .divider{ margin:6px 0; }
   table{ width:100%; border-collapse:collapse; }
   td,th{ padding:5px 6px; border-bottom:1px solid var(--line2); font-size:11px; vertical-align:top; }
   td:last-child, th:last-child{ text-align:right; }
@@ -138,6 +146,10 @@
   table.thesis{ border-collapse:collapse; width:100%; font-size:11px; margin-top:8px; }
   table.thesis caption{ caption-side:top; text-align:center; font-style:italic; font-size:12px; margin-bottom:6px; }
   table.thesis th, table.thesis td{ border:1px solid rgba(15,23,42,0.55); padding:3px 4px; text-align:center; font-size:10px; }
+  main > section:first-child table.thesis{ margin-top:5px; }
+  main > section:first-child table.thesis caption{ margin-bottom:4px; font-size:11px; }
+  main > section:first-child table.thesis th,
+  main > section:first-child table.thesis td{ padding:2px 4px; font-size:9.5px; }
   table.thesis thead th{ font-weight:700; }
   table.thesis .superhdr{ font-weight:700; }
   table.case-matrix .rowhdr{ font-weight:700; background:rgba(15,23,42,0.04); }
@@ -148,15 +160,22 @@
   .metricBox .v{ font-weight:700; font-size:13px; margin-top:2px; }
   table.case-matrix{ table-layout:fixed; margin-top:8px; }
   table.case-matrix td, table.case-matrix th{ text-align:center; padding:3px 4px; font-size:10px; border:1px solid rgba(15,23,42,0.55); }
+  main > section:first-child table.case-matrix{ margin-top:5px; }
+  main > section:first-child table.case-matrix td,
+  main > section:first-child table.case-matrix th{ padding:2px 4px; font-size:9.5px; }
   td.case-cell{ cursor:pointer; background:#fff; }
   td.case-cell.sel{ background:rgba(37,99,235,0.14); outline:2px solid rgba(37,99,235,0.55); outline-offset:-2px; font-weight:700; }
   .statusLine{ margin-top:6px; color:var(--muted); font-size:10.8px; }
+  main > section:first-child .statusLine{ margin-top:4px; line-height:1.18; }
   .infobox{ margin-top:8px; padding:8px 10px; border-radius:10px; border:1px solid rgba(15,23,42,0.12); background:rgba(15,23,42,0.03); }
+  main > section:first-child .infobox{ margin-top:5px; padding:6px 8px; }
   .warnbox{ margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid rgba(245,158,11,0.35); background:rgba(245,158,11,0.08); color:#78350f; }
   .sym i{ font-style:italic; }
   .sym sub{ font-size:0.8em; vertical-align:sub; }
   .figcap{ text-align:center; margin-top:4px; font-size:11px; }
+  #feCaseCard .figcap{ margin-top:2px; font-size:10.5px; }
   .specPick{ margin-top:10px; }
+  #feCaseCard .specPick{ margin-top:6px; }
   .specGrid{
     display:grid;
     grid-template-columns:60px 18px 90px 18px 90px 18px 90px;
@@ -165,6 +184,8 @@
   }
   .specTop{ margin-bottom:4px; font-size:11px; color:var(--muted); }
   .specBottom{ margin-top:6px; font-size:11px; color:var(--muted); }
+  #feCaseCard .specTop{ margin-bottom:3px; font-size:10px; }
+  #feCaseCard .specBottom{ margin-top:4px; font-size:10px; }
   .specTop .left{ grid-column:1; text-align:center; font-weight:700; }
   .specTop .right{ grid-column:5 / span 3; text-align:center; }
   .specDot{ text-align:center; font-size:16px; font-weight:400; color:rgba(15,23,42,0.55); }
@@ -194,7 +215,10 @@
     button{ font-size:11.5px; padding:6px 10px; }
     .imgWrap{ height:270px; }
   }
+  #feCaseCard .specSel{ padding:3px 6px; font-size:12px; }
   .modelName{ margin-top:8px; padding:8px; border-radius:8px; border:1px solid var(--line2); background:rgba(15,23,42,0.02); }
+  #caseGuideNote{ margin-top:4px !important; line-height:1.15; }
+  #caseSelHint{ margin-left:6px !important; }
 </style>
 </head>
 <body>
@@ -276,7 +300,7 @@
       <div class="small muted" id="caseGuideNote" style="margin-top:6px;">
         C00 to C99 are reduced web section opening cases as shown in the matrix above. C100 is the full section.
       </div>
-      <div class="btnrow" style="margin-top:8px;">
+      <div class="btnrow case-actions" style="margin-top:8px;">
         <button id="btnFull">Select C100 (Full section)</button>
         <button id="btnReset" class="primary">Reset view</button>
         <div class="small muted" id="caseSelHint" style="margin-left:10px;">Click a cell in the matrix above to select a case.</div>
