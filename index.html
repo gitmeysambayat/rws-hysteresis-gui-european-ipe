@@ -52,17 +52,17 @@
     .brandBox .cityBrand{ height:38px; }
   }
   main{
-    padding:10px;
+    padding:9px;
     display:grid;
     grid-template-columns: clamp(390px, 22vw, 440px) minmax(0,1fr);
-    gap:12px;
+    gap:10px;
     align-items:start;
   }
   @media (max-width: 1100px){ main{ grid-template-columns:1fr; } }
   .workspace{
     display:grid;
     grid-template-columns:minmax(0, 1fr) clamp(380px, 22vw, 430px);
-    gap:12px;
+    gap:10px;
     align-items:start;
   }
   @media (max-width: 1500px){ .workspace{ grid-template-columns:1fr; } }
@@ -73,7 +73,7 @@
     border-radius:12px;
     box-shadow:0 1px 0 rgba(15,23,42,0.03);
     padding:10px;
-    margin-bottom:10px;
+    margin-bottom:8px;
   }
   h2{
     margin:0 0 8px 0;
@@ -117,7 +117,7 @@
   .compactCard .modeCardHead{ align-items:center; }
   .plot-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
   .plot-title{ font-weight:700; font-size:13px; }
-  #plotSvg{ width:100%; height:auto; aspect-ratio:760 / 440; display:block; border-radius:12px; border:1px solid var(--line2); background:#fff; }
+  #plotSvg{ width:100%; height:auto; aspect-ratio:760 / 330; display:block; border-radius:12px; border:1px solid var(--line2); background:#fff; }
   .legend{ margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; }
   .legitem{ display:flex; align-items:center; gap:6px; font-size:11px; border:1px solid var(--line2); background:rgba(15,23,42,0.02); border-radius:999px; padding:3px 8px; cursor:pointer; }
   .legitem.active{ outline:2px solid rgba(37,99,235,0.45); outline-offset:1px; }
@@ -186,13 +186,13 @@
   @media (max-width: 900px){ .contours{ grid-template-columns:1fr; } }
   .contourItem{ }
   .contourHead{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-bottom:6px; }
-  .imgWrap{ border:1px solid var(--line2); border-radius:12px; background:#ffffff; padding:0; height:520px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .imgWrap{ border:1px solid var(--line2); border-radius:12px; background:#ffffff; padding:0; height:260px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
   .imgWrap img{ width:100%; height:100%; display:block; border-radius:8px; cursor:zoom-in; object-fit:contain; object-position:center center; }
   @media (min-width: 1700px){
     body{ font-size:12.5px; }
-    .card{ padding:12px; }
+    .card{ padding:10px; }
     button{ font-size:11.5px; padding:6px 10px; }
-    .imgWrap{ height:560px; }
+    .imgWrap{ height:270px; }
   }
   .modelName{ margin-top:8px; padding:8px; border-radius:8px; border:1px solid var(--line2); background:rgba(15,23,42,0.02); }
 </style>
@@ -371,7 +371,7 @@
           <button id="btnPng">Export PNG</button>
         </div>
       </div>
-      <svg id="plotSvg" viewBox="0 0 760 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hysteresis curve plot"></svg>
+      <svg id="plotSvg" viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hysteresis curve plot"></svg>
       <div class="legend" id="legend"></div>
       <div class="statusLine" id="curveStackStatus">Primary curve follows the selected model.</div>
     </div>
@@ -408,7 +408,7 @@
             <a class="small muted" id="linkVonMises" href="#" target="_blank" rel="noopener">open</a>
           </div>
           <div class="imgWrap">
-            <img id="imgVonMises" alt="von Mises contour plot" loading="lazy">
+            <img id="imgVonMises" alt="von Mises contour plot" loading="eager" fetchpriority="high">
           </div>
         </div>
         <div class="contourItem">
@@ -417,7 +417,7 @@
             <a class="small muted" id="linkPEEQ" href="#" target="_blank" rel="noopener">open</a>
           </div>
           <div class="imgWrap">
-            <img id="imgPEEQ" alt="PEEQ contour plot" loading="lazy">
+            <img id="imgPEEQ" alt="PEEQ contour plot" loading="eager" fetchpriority="high">
           </div>
         </div>
       </div>
@@ -584,7 +584,7 @@ async function loadChunk(preferredCase=null){
   const seq = ++app.loadSeq;
   if (!app.chunkCache.has(path)){
     el.chunkStatus.textContent = `Loading ${profile}, ${grade}, 2L/h = ${span}...`;
-    const response = await fetch(`${path}?v=20260515_axis_v1`);
+    const response = await fetch(`${path}?v=20260515_compact_v1`);
     if (!response.ok) throw new Error(`Could not load ${path}`);
     app.chunkCache.set(path, await response.json());
   }
@@ -893,8 +893,8 @@ function renderPlot(){
   clearSvg();
   const r = app.selected;
   if (!r) return;
-  const W = 760, H = 440;
-  const margin = {left:72, right:24, top:24, bottom:58};
+  const W = 760, H = 330;
+  const margin = {left:72, right:24, top:18, bottom:44};
   const innerW = W - margin.left - margin.right;
   const innerH = H - margin.top - margin.bottom;
   const records = [{rec:r, role:'selected', modelIndex:0}, ...app.addedCurves.map((rec, i) => ({rec, role:'added', modelIndex:i + 1}))];
@@ -988,7 +988,7 @@ function renderPlot(){
     if (c.dash) attrs['stroke-dasharray'] = c.dash;
     curveLayer.appendChild(svgEl('path', attrs));
   }
-  const xLab = svgEl('text', {x:margin.left+innerW/2,y:H-18,'text-anchor':'middle','font-size':13,fill:'#111827'});
+  const xLab = svgEl('text', {x:margin.left+innerW/2,y:H-12,'text-anchor':'middle','font-size':13,fill:'#111827'});
   xLab.textContent = 'Rotation, theta (rad)';
   g.appendChild(xLab);
   const yLab = svgEl('text', {x:18,y:margin.top+innerH/2,transform:`rotate(-90 18 ${margin.top+innerH/2})`,'text-anchor':'middle','font-size':13,fill:'#111827'});
@@ -1107,7 +1107,7 @@ function showError(err){
 
 async function init(){
   try{
-    const response = await fetch('data/manifest.json?v=20260515_axis_v1');
+    const response = await fetch('data/manifest.json?v=20260515_compact_v1');
     if (!response.ok) throw new Error('Could not load data/manifest.json');
     app.manifest = await response.json();
     initControls();
