@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RWS Hysteresis FE-ML Explorer</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#475569;
+    --line:rgba(15,23,42,0.14);
+    --line2:rgba(15,23,42,0.08);
+    --accent:#2563eb;
+    --fe:#6aaee6;
+    --cal:#f97316;
+    --pred:#111827;
+    --good:#16a34a;
+    --bad:#dc2626;
+    --warn:#f59e0b;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    font-size:12px;
+    color:var(--text);
+    background:var(--bg);
+  }
+  header{
+    padding:10px 12px 8px 12px;
+    border-bottom:1px solid var(--line2);
+    background:linear-gradient(180deg,#ffffff,#f6f7fb);
+    display:flex;
+    justify-content:space-between;
+    gap:18px;
+    align-items:center;
+  }
+  .headText{ min-width:0; }
+  .title{ font-weight:700; font-size:15px; line-height:1.25; }
+  .metaLine{ margin-top:4px; color:var(--muted); font-size:10.5px; line-height:1.35; }
+  .brandBox{ display:flex; align-items:center; gap:12px; flex:0 0 auto; }
+  .brandBox img{ object-fit:contain; display:block; }
+  .brandBox .labBrand{ height:40px; width:auto; }
+  .brandBox .cityBrand{ height:56px; width:auto; }
+  @media (max-width: 900px){
+    header{ align-items:flex-start; flex-direction:column; }
+    .brandBox .labBrand{ height:44px; }
+    .brandBox .cityBrand{ height:38px; }
+  }
+  main{
+    padding:10px;
+    display:grid;
+    grid-template-columns: clamp(390px, 22vw, 440px) minmax(0,1fr);
+    gap:12px;
+    align-items:start;
+  }
+  @media (max-width: 1100px){ main{ grid-template-columns:1fr; } }
+  .workspace{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) clamp(380px, 22vw, 430px);
+    gap:12px;
+    align-items:start;
+  }
+  @media (max-width: 1500px){ .workspace{ grid-template-columns:1fr; } }
+  .workspace .wide{ grid-column:1 / -1; }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line2);
+    border-radius:12px;
+    box-shadow:0 1px 0 rgba(15,23,42,0.03);
+    padding:10px;
+    margin-bottom:10px;
+  }
+  h2{
+    margin:0 0 8px 0;
+    font-size:11.5px;
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    color:rgba(15,23,42,0.72);
+  }
+  h2.case-sensitive{ text-transform:none; }
+  .control{ margin-bottom:7px; }
+  .control-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .label{ font-size:10.8px; color:var(--muted); }
+  .value{ font-size:11px; font-weight:700; }
+  input[type="range"]{ width:100%; margin-top:4px; accent-color:var(--accent); }
+  .range-foot{ display:flex; justify-content:space-between; margin-top:2px; font-size:10px; color:var(--muted); }
+  select{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--text);
+    border-radius:8px;
+    padding:5px 7px;
+    font-size:12px;
+  }
+  button{
+    appearance:none;
+    border:1px solid rgba(15,23,42,0.18);
+    background:linear-gradient(180deg,#fff,#f8fafc);
+    color:var(--text);
+    padding:6px 9px;
+    border-radius:10px;
+    font-size:11px;
+    cursor:pointer;
+  }
+  button.primary{ background:linear-gradient(180deg,rgba(37,99,235,1),rgba(29,78,216,1)); color:#fff; border-color:rgba(29,78,216,1); }
+  .btnbar{ display:flex; gap:8px; flex-wrap:wrap; }
+  .btnrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .seg{ display:flex; gap:6px; flex-wrap:wrap; }
+  .seg button.active{ background:#0f172a; color:#fff; border-color:#0f172a; }
+  .modeCardHead{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .compactCard .modeCardHead{ align-items:center; }
+  .plot-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+  .plot-title{ font-weight:700; font-size:13px; }
+  #plotSvg{ width:100%; height:auto; aspect-ratio:760 / 440; display:block; border-radius:12px; border:1px solid var(--line2); background:#fff; }
+  .legend{ margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; }
+  .legitem{ display:flex; align-items:center; gap:6px; font-size:11px; border:1px solid var(--line2); background:rgba(15,23,42,0.02); border-radius:999px; padding:3px 8px; cursor:pointer; }
+  .legitem.active{ outline:2px solid rgba(37,99,235,0.45); outline-offset:1px; }
+  .swatch{ width:10px; height:10px; border-radius:2px; }
+  .small{ font-size:11px; }
+  .muted{ color:var(--muted); }
+  .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:999px; font-weight:700; font-size:10px; border:1px solid var(--line2); }
+  .badge.good{ background:rgba(22,163,74,0.08); color:var(--good); border-color:rgba(22,163,74,0.25); }
+  .badge.bad{ background:rgba(220,38,38,0.08); color:var(--bad); border-color:rgba(220,38,38,0.25); }
+  .badge.warn{ background:rgba(245,158,11,0.10); color:#92400e; border-color:rgba(245,158,11,0.28); }
+  .row{ display:flex; justify-content:space-between; gap:12px; align-items:baseline; }
+  .divider{ height:1px; background:var(--line2); margin:10px 0; }
+  table{ width:100%; border-collapse:collapse; }
+  td,th{ padding:5px 6px; border-bottom:1px solid var(--line2); font-size:11px; vertical-align:top; }
+  td:last-child, th:last-child{ text-align:right; }
+  th{ color:var(--muted); font-weight:700; }
+  table.thesis{ border-collapse:collapse; width:100%; font-size:11px; margin-top:8px; }
+  table.thesis caption{ caption-side:top; text-align:center; font-style:italic; font-size:12px; margin-bottom:6px; }
+  table.thesis th, table.thesis td{ border:1px solid rgba(15,23,42,0.55); padding:3px 4px; text-align:center; font-size:10px; }
+  table.thesis thead th{ font-weight:700; }
+  table.thesis .superhdr{ font-weight:700; }
+  table.case-matrix .rowhdr{ font-weight:700; background:rgba(15,23,42,0.04); }
+  table.case-matrix .colhdr{ font-weight:700; background:rgba(15,23,42,0.04); }
+  .metricGrid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .metricBox{ border:1px solid var(--line2); border-radius:8px; padding:8px; background:rgba(15,23,42,0.02); }
+  .metricBox .k{ color:var(--muted); font-size:10.5px; }
+  .metricBox .v{ font-weight:700; font-size:13px; margin-top:2px; }
+  table.case-matrix{ table-layout:fixed; margin-top:8px; }
+  table.case-matrix td, table.case-matrix th{ text-align:center; padding:3px 4px; font-size:10px; border:1px solid rgba(15,23,42,0.55); }
+  td.case-cell{ cursor:pointer; background:#fff; }
+  td.case-cell.sel{ background:rgba(37,99,235,0.14); outline:2px solid rgba(37,99,235,0.55); outline-offset:-2px; font-weight:700; }
+  .statusLine{ margin-top:6px; color:var(--muted); font-size:10.8px; }
+  .infobox{ margin-top:8px; padding:8px 10px; border-radius:10px; border:1px solid rgba(15,23,42,0.12); background:rgba(15,23,42,0.03); }
+  .warnbox{ margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid rgba(245,158,11,0.35); background:rgba(245,158,11,0.08); color:#78350f; }
+  .sym i{ font-style:italic; }
+  .sym sub{ font-size:0.8em; vertical-align:sub; }
+  .figcap{ text-align:center; margin-top:4px; font-size:11px; }
+  .specPick{ margin-top:10px; }
+  .specGrid{
+    display:grid;
+    grid-template-columns:60px 18px 90px 18px 90px 18px 90px;
+    justify-content:center;
+    align-items:center;
+  }
+  .specTop{ margin-bottom:4px; font-size:11px; color:var(--muted); }
+  .specBottom{ margin-top:6px; font-size:11px; color:var(--muted); }
+  .specTop .left{ grid-column:1; text-align:center; font-weight:700; }
+  .specTop .right{ grid-column:5 / span 3; text-align:center; }
+  .specDot{ text-align:center; font-size:16px; font-weight:400; color:rgba(15,23,42,0.55); }
+  .specSel{
+    width:100%;
+    padding:4px 6px;
+    border-radius:8px;
+    border:1px solid rgba(15,23,42,0.35);
+    background:#fff;
+    font-family:Arial, sans-serif;
+    font-size:13px;
+    font-weight:700;
+    text-align:center;
+    text-align-last:center;
+  }
+  .specSel:focus{ outline:2px solid rgba(37,99,235,0.55); outline-offset:2px; }
+  .specBottom .lbl{ text-align:center; line-height:1.15; }
+  .contours{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width: 900px){ .contours{ grid-template-columns:1fr; } }
+  .contourItem{ }
+  .contourHead{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-bottom:6px; }
+  .imgWrap{ border:1px solid var(--line2); border-radius:12px; background:#ffffff; padding:0; height:520px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .imgWrap img{ width:100%; height:100%; display:block; border-radius:8px; cursor:zoom-in; object-fit:contain; object-position:center center; }
+  @media (min-width: 1700px){
+    body{ font-size:12.5px; }
+    .card{ padding:12px; }
+    button{ font-size:11.5px; padding:6px 10px; }
+    .imgWrap{ height:560px; }
+  }
+  .modelName{ margin-top:8px; padding:8px; border-radius:8px; border:1px solid var(--line2); background:rgba(15,23,42,0.02); }
+</style>
+</head>
+<body>
+<header>
+  <div class="headText">
+    <div class="title">Interactive hysteresis prediction for circular reduced web section connections in European IPE beams</div>
+    <div class="metaLine">FE cyclic history, FE backbone envelope, calibrated mIK hysteresis reconstruction, machine-learning predicted mIK hysteresis reconstruction and FE contour fields for the 7,575 laterally restrained database records.</div>
+  </div>
+  <div class="brandBox" aria-label="Institutional and research group logos">
+    <img class="labBrand" src="assets/3DMBC_logo.png" alt="3DMBC logo">
+    <img class="cityBrand" src="assets/city-st-georges-responsive-logo.svg" alt="City St George's, University of London logo">
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="card compactCard" id="modeCard">
+      <div class="modeCardHead">
+        <div class="small muted">Mode</div>
+        <div class="seg" role="tablist" aria-label="Application mode">
+          <button id="btnModeFe" class="active" type="button">FE benchmark mode</button>
+          <button id="btnModeMl" type="button">ML prediction mode</button>
+        </div>
+      </div>
+      <div class="statusLine" id="modeStatus">FE benchmark mode compares the FE hysteretic response with the calibrated mIK reconstruction.</div>
+    </div>
+
+    <div class="card" id="feInputCard">
+      <h2>FE inputs</h2>
+      <div class="control">
+        <div class="control-head"><div class="label">Profile (IPE)</div><div class="value" id="valProfile">-</div></div>
+        <input id="slProfile" type="range" min="0" max="0" value="0" step="1">
+        <div class="range-foot"><span id="minProfile"></span><span id="maxProfile"></span></div>
+      </div>
+      <div class="control">
+        <div class="control-head"><div class="label">Steel grade</div><div class="value" id="valGrade">-</div></div>
+        <input id="slGrade" type="range" min="0" max="0" value="0" step="1">
+        <div class="range-foot"><span id="minGrade"></span><span id="maxGrade"></span></div>
+      </div>
+      <div class="control">
+        <div class="control-head"><div class="label">Span-to-depth ratio</div><div class="value" id="valSpan">-</div></div>
+        <input id="slSpan" type="range" min="0" max="0" value="0" step="1">
+        <div class="range-foot"><span id="minSpan"></span><span id="maxSpan"></span></div>
+      </div>
+      <div class="control">
+        <div class="control-head">
+          <div class="label">Web opening, <span class="sym"><i>d</i><sub>o</sub>/<i>h</i></span> (%)</div>
+          <div class="value" id="valDo">-</div>
+        </div>
+        <input id="slDo" type="range" min="0" max="0" value="0" step="1">
+        <div class="range-foot"><span id="minDo"></span><span id="maxDo"></span></div>
+      </div>
+      <div class="control">
+        <div class="control-head">
+          <div class="label">Web opening distance from column face, <span class="sym"><i>S</i>/<i>h</i></span> (%)</div>
+          <div class="value" id="valSh">-</div>
+        </div>
+        <input id="slSh" type="range" min="0" max="0" value="0" step="1">
+        <div class="range-foot"><span id="minSh"></span><span id="maxSh"></span></div>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <div class="small muted">Model</div>
+        <div class="mono" id="modelName">-</div>
+      </div>
+      <div class="infobox">
+        <div class="small muted" id="geomLine"></div>
+        <div class="small muted" id="mpLine" style="margin-top:4px;"></div>
+        <div class="statusLine" id="chunkStatus">Loading manifest...</div>
+      </div>
+      <div class="control" style="display:none;">
+        <div class="control-head"><div class="label">Opening case</div><div class="value" id="valCase">-</div></div>
+        <select id="caseSelect" style="display:none" aria-hidden="true"></select>
+      </div>
+    </div>
+
+    <div class="card" id="feCaseCard">
+      <h2>Case guide and specimen classification</h2>
+      <table class="thesis case-matrix" id="caseMatrix"></table>
+      <div class="small muted" id="caseGuideNote" style="margin-top:6px;">
+        C00 to C99 are reduced web section opening cases as shown in the matrix above. C100 is the full section.
+      </div>
+      <div class="btnrow" style="margin-top:8px;">
+        <button id="btnFull">Select C100 (Full section)</button>
+        <button id="btnReset" class="primary">Reset view</button>
+        <div class="small muted" id="caseSelHint" style="margin-left:10px;">Click a cell in the matrix above to select a case.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <table class="thesis">
+        <caption>Table 1.6: Variables and modelling options</caption>
+        <thead>
+          <tr>
+            <th style="width:34%;">Variable</th>
+            <th>Options</th>
+            <th style="width:16%;">Number of</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:left;"><span class="sym"><i>S</i></span> and <span class="sym"><i>d</i><sub>o</sub></span></td>
+            <td style="text-align:left;">100 configurations + Solid</td>
+            <td>101</td>
+          </tr>
+          <tr>
+            <td style="text-align:left;">Span-to-depth</td>
+            <td style="text-align:left;">6, 7, 9, 12, 14</td>
+            <td>5</td>
+          </tr>
+          <tr>
+            <td style="text-align:left;">Profile</td>
+            <td style="text-align:left;">IPE270, IPE330, IPE400, IPE500, IPE600</td>
+            <td>5</td>
+          </tr>
+          <tr>
+            <td style="text-align:left;">Material grade</td>
+            <td style="text-align:left;">S235, S275, S355</td>
+            <td>3</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; font-weight:700;">Total models</td>
+            <td style="text-align:left; font-weight:700;">(101 x 5 x 5 x 3) = 7575</td>
+            <td style="font-weight:700;">7575</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="divider"></div>
+
+      <div class="specPick" aria-label="Specimen classification selector">
+        <div class="specGrid specTop">
+          <div class="left">Batch label</div>
+          <div class="right">Combination of (<span class="sym"><i>S</i>/<i>h</i></span>) and (<span class="sym"><i>d</i><sub>o</sub>/<i>h</i></span>)</div>
+        </div>
+        <div class="specGrid specRow">
+          <select id="pickL" class="specSel" aria-label="Batch label"></select>
+          <div class="specDot">.</div>
+          <select id="pickProfile" class="specSel" aria-label="Beam profile (IPE)"></select>
+          <div class="specDot">.</div>
+          <select id="pickGrade" class="specSel" aria-label="Beam steel grade"></select>
+          <div class="specDot">.</div>
+          <select id="pickCase" class="specSel" aria-label="Case ID"></select>
+        </div>
+        <div class="specGrid specBottom" aria-hidden="true">
+          <div class="lbl">Beam span-to-depth<br>ratio</div>
+          <div></div>
+          <div class="lbl">Beam profile (IPE)</div>
+          <div></div>
+          <div class="lbl">Beam steel<br>grade</div>
+          <div></div>
+          <div class="lbl">Case ID</div>
+        </div>
+      </div>
+      <div class="figcap"><i>Specimen classification</i></div>
+    </div>
+  </section>
+
+  <section class="workspace">
+    <div class="card plotcard">
+      <div class="plot-head">
+        <div>
+          <div class="plot-title" id="plotTitle">Cyclic moment-rotation response</div>
+          <div class="small muted" id="plotSub">-</div>
+        </div>
+        <div class="btnbar">
+          <button id="btnPlotHys" class="primary">Hysteresis</button>
+          <button id="btnPlotBackbone">FE backbone</button>
+          <button id="btnFE" class="primary">FE: on</button>
+          <button id="btnCal" class="primary">Calibrated mIK: on</button>
+          <button id="btnPred" class="primary">Predicted mIK: on</button>
+          <button id="btnAddCurve">Add curve</button>
+          <button id="btnClearCurves">Clear added</button>
+          <button id="btnSvg">Export SVG</button>
+          <button id="btnPng">Export PNG</button>
+        </div>
+      </div>
+      <svg id="plotSvg" viewBox="0 0 760 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hysteresis curve plot"></svg>
+      <div class="legend" id="legend"></div>
+      <div class="statusLine" id="curveStackStatus">Primary curve follows the selected model.</div>
+    </div>
+
+    <aside>
+      <div class="card">
+        <h2>Branch and curve metrics</h2>
+        <div id="branchBox" class="small muted">-</div>
+        <div class="divider"></div>
+        <div class="metricGrid">
+          <div class="metricBox"><div class="k">Calibrated R</div><div class="v" id="mCalR">-</div></div>
+          <div class="metricBox"><div class="k">Predicted R</div><div class="v" id="mPredR">-</div></div>
+          <div class="metricBox"><div class="k">Calibrated RMSE</div><div class="v" id="mCalRmse">-</div></div>
+          <div class="metricBox"><div class="k">Predicted RMSE</div><div class="v" id="mPredRmse">-</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="case-sensitive">mIK labels</h2>
+        <table>
+          <thead><tr><th>Quantity</th><th>Calibrated</th><th>Predicted</th></tr></thead>
+          <tbody id="labelTable"></tbody>
+        </table>
+      </div>
+
+    </aside>
+
+    <div class="card wide" id="contourCard">
+      <h2>Contour plots</h2>
+      <div class="contours">
+        <div class="contourItem">
+          <div class="contourHead">
+            <div class="small" style="font-weight:700;">von Mises</div>
+            <a class="small muted" id="linkVonMises" href="#" target="_blank" rel="noopener">open</a>
+          </div>
+          <div class="imgWrap">
+            <img id="imgVonMises" alt="von Mises contour plot" loading="lazy">
+          </div>
+        </div>
+        <div class="contourItem">
+          <div class="contourHead">
+            <div class="small" style="font-weight:700;">PEEQ</div>
+            <a class="small muted" id="linkPEEQ" href="#" target="_blank" rel="noopener">open</a>
+          </div>
+          <div class="imgWrap">
+            <img id="imgPEEQ" alt="PEEQ contour plot" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const app = {
+  manifest: null,
+  chunkCache: new Map(),
+  chunk: null,
+  selected: null,
+  addedCurves: [],
+  loadSeq: 0,
+  mode: 'fe',
+  showHysteresis: true,
+  showBackbone: false,
+  showFE: true,
+  showCal: true,
+  showPred: false
+};
+
+const el = {
+  slProfile: document.getElementById('slProfile'),
+  slGrade: document.getElementById('slGrade'),
+  slSpan: document.getElementById('slSpan'),
+  slDo: document.getElementById('slDo'),
+  slSh: document.getElementById('slSh'),
+  valProfile: document.getElementById('valProfile'),
+  valGrade: document.getElementById('valGrade'),
+  valSpan: document.getElementById('valSpan'),
+  valDo: document.getElementById('valDo'),
+  valSh: document.getElementById('valSh'),
+  valCase: document.getElementById('valCase'),
+  minProfile: document.getElementById('minProfile'),
+  maxProfile: document.getElementById('maxProfile'),
+  minGrade: document.getElementById('minGrade'),
+  maxGrade: document.getElementById('maxGrade'),
+  minSpan: document.getElementById('minSpan'),
+  maxSpan: document.getElementById('maxSpan'),
+  minDo: document.getElementById('minDo'),
+  maxDo: document.getElementById('maxDo'),
+  minSh: document.getElementById('minSh'),
+  maxSh: document.getElementById('maxSh'),
+  caseSelect: document.getElementById('caseSelect'),
+  caseMatrix: document.getElementById('caseMatrix'),
+  chunkStatus: document.getElementById('chunkStatus'),
+  geomLine: document.getElementById('geomLine'),
+  mpLine: document.getElementById('mpLine'),
+  svg: document.getElementById('plotSvg'),
+  plotTitle: document.getElementById('plotTitle'),
+  plotSub: document.getElementById('plotSub'),
+  legend: document.getElementById('legend'),
+  curveStackStatus: document.getElementById('curveStackStatus'),
+  branchBox: document.getElementById('branchBox'),
+  mCalR: document.getElementById('mCalR'),
+  mPredR: document.getElementById('mPredR'),
+  mCalRmse: document.getElementById('mCalRmse'),
+  mPredRmse: document.getElementById('mPredRmse'),
+  labelTable: document.getElementById('labelTable'),
+  btnFull: document.getElementById('btnFull'),
+  btnReset: document.getElementById('btnReset'),
+  btnModeFe: document.getElementById('btnModeFe'),
+  btnModeMl: document.getElementById('btnModeMl'),
+  modeStatus: document.getElementById('modeStatus'),
+  modelName: document.getElementById('modelName'),
+  btnPlotHys: document.getElementById('btnPlotHys'),
+  btnPlotBackbone: document.getElementById('btnPlotBackbone'),
+  btnFE: document.getElementById('btnFE'),
+  btnCal: document.getElementById('btnCal'),
+  btnPred: document.getElementById('btnPred'),
+  btnAddCurve: document.getElementById('btnAddCurve'),
+  btnClearCurves: document.getElementById('btnClearCurves'),
+  btnSvg: document.getElementById('btnSvg'),
+  btnPng: document.getElementById('btnPng'),
+  imgVonMises: document.getElementById('imgVonMises'),
+  imgPEEQ: document.getElementById('imgPEEQ'),
+  linkVonMises: document.getElementById('linkVonMises'),
+  linkPEEQ: document.getElementById('linkPEEQ'),
+  pickL: document.getElementById('pickL'),
+  pickProfile: document.getElementById('pickProfile'),
+  pickGrade: document.getElementById('pickGrade'),
+  pickCase: document.getElementById('pickCase')
+};
+
+const fmt = (v, d=3) => Number.isFinite(Number(v)) ? Number(v).toFixed(d) : '-';
+const fmtSmart = (v) => {
+  const x = Number(v);
+  if (!Number.isFinite(x)) return '-';
+  if (Math.abs(x) >= 100) return x.toFixed(1);
+  if (Math.abs(x) >= 10) return x.toFixed(2);
+  if (Math.abs(x) >= 1) return x.toFixed(3);
+  return x.toFixed(5);
+};
+const pct = v => Math.round(Number(v) * 100);
+const doOptions = () => app.manifest.do_h_values.map(Number);
+const shOptions = () => app.manifest.S_h_values.map(Number);
+const caseNum = rec => Number(String(rec.case).replace('C',''));
+
+function niceStep(maxAbs, targetPositiveTicks=4){
+  const value = Math.max(Math.abs(Number(maxAbs) || 0), 1);
+  const rough = value / targetPositiveTicks;
+  const base = Math.pow(10, Math.floor(Math.log10(rough)));
+  for (const m of [1, 2, 2.5, 5, 10]){
+    const step = m * base;
+    if (step >= rough) return step;
+  }
+  return 10 * base;
+}
+
+function axisNumber(v, decimals=0){
+  const x = Math.abs(v) < 1e-12 ? 0 : v;
+  return decimals > 0 ? x.toFixed(decimals) : String(Math.round(x));
+}
+
+function caseFromOpening(do_h, s_h){
+  if (Number(do_h) === 0 && Number(s_h) === 0) return 'C100';
+  const col = Math.round((Number(do_h) - 0.30) / 0.05);
+  const row = Math.round((Number(s_h) - 0.60) / 0.20);
+  return `C${String(col * 10 + row).padStart(2,'0')}`;
+}
+
+function setOpeningSlidersForRecord(rec){
+  const dOpts = doOptions();
+  const sOpts = shOptions();
+  const dIndex = Math.max(0, dOpts.findIndex(v => Math.abs(v - Number(rec.do_h)) < 1e-9));
+  const sIndex = Math.max(0, sOpts.findIndex(v => Math.abs(v - Number(rec.S_h)) < 1e-9));
+  el.slDo.value = dIndex;
+  el.slSh.value = sIndex;
+  el.valDo.textContent = pct(rec.do_h);
+  el.valSh.textContent = pct(rec.S_h);
+}
+
+function svgEl(tag, attrs={}){
+  const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k,v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+  return node;
+}
+
+function clearSvg(){
+  while (el.svg.firstChild) el.svg.removeChild(el.svg.firstChild);
+}
+
+function currentKey(){
+  const profile = app.manifest.profiles[Number(el.slProfile.value)];
+  const grade = app.manifest.grades[Number(el.slGrade.value)];
+  const span = app.manifest.spans[Number(el.slSpan.value)];
+  return {profile, grade, span, key:`${profile}|${grade}|${span}`};
+}
+
+function updateControlLabels(){
+  const {profile, grade, span} = currentKey();
+  el.valProfile.textContent = profile;
+  el.valGrade.textContent = grade;
+  el.valSpan.textContent = span;
+}
+
+async function loadChunk(preferredCase=null){
+  updateControlLabels();
+  const {key, profile, grade, span} = currentKey();
+  const path = app.manifest.chunks[key];
+  if (!path) throw new Error(`Missing data chunk for ${key}`);
+  const seq = ++app.loadSeq;
+  if (!app.chunkCache.has(path)){
+    el.chunkStatus.textContent = `Loading ${profile}, ${grade}, 2L/h = ${span}...`;
+    const response = await fetch(`${path}?v=20260515_axis_v1`);
+    if (!response.ok) throw new Error(`Could not load ${path}`);
+    app.chunkCache.set(path, await response.json());
+  }
+  if (seq !== app.loadSeq) return;
+  app.chunk = app.chunkCache.get(path);
+  el.chunkStatus.textContent = `${app.chunk.records.length} records loaded for ${profile}, ${grade}, 2L/h = ${span}.`;
+  fillCaseSelect();
+  const targetCase = preferredCase || (app.selected && app.selected.case) || el.caseSelect.value || app.chunk.records[0].case;
+  selectCase(targetCase);
+}
+
+function fillCaseSelect(){
+  const selected = el.caseSelect.value;
+  el.caseSelect.innerHTML = '';
+  for (const rec of [...app.chunk.records].sort((a,b) => caseNum(a) - caseNum(b))){
+    const option = document.createElement('option');
+    option.value = rec.case;
+    option.textContent = `${rec.case} (${rec.model})`;
+    el.caseSelect.appendChild(option);
+  }
+  if ([...el.caseSelect.options].some(o => o.value === selected)) el.caseSelect.value = selected;
+  fillSpecCaseOptions();
+}
+
+function buildCaseMatrix(){
+  const doVals = app.manifest.do_h_values.filter(v => v !== 0);
+  const sVals = app.manifest.S_h_values.filter(v => v !== 0);
+  let html = `
+    <caption>Parametric combinations of (<span class="sym"><i>S</i>/<i>h</i></span>) and (<span class="sym"><i>d</i><sub>o</sub>/<i>h</i></span>) in each batch of analysis</caption>
+    <thead>
+      <tr><th style="border-right:0;"></th><th class="superhdr" colspan="${doVals.length}">(<span class="sym"><i>d</i><sub>o</sub>/<i>h</i></span>)%</th></tr>
+      <tr><th class="superhdr">(<span class="sym"><i>S</i>/<i>h</i></span>)%</th>`;
+  for (const d of doVals) html += `<th class="colhdr">${pct(d)}</th>`;
+  html += '</tr></thead><tbody>';
+  for (const s of sVals){
+    html += `<tr><th class="rowhdr">${pct(s)}</th>`;
+    for (const d of doVals){
+      const col = Math.round((d - 0.30) / 0.05);
+      const row = Math.round((s - 0.60) / 0.20);
+      const num = col * 10 + row;
+      const cid = `C${String(num).padStart(2,'0')}`;
+      html += `<td class="case-cell mono" data-do="${pct(d)}" data-sh="${pct(s)}" data-case="${cid}">${cid}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody>';
+  el.caseMatrix.innerHTML = html;
+  for (const td of el.caseMatrix.querySelectorAll('.case-cell')){
+    td.addEventListener('click', () => selectCase(td.dataset.case));
+  }
+}
+
+function fillSimpleSelect(select, values, labeler = v => String(v)){
+  select.innerHTML = '';
+  for (const value of values){
+    const opt = document.createElement('option');
+    opt.value = String(value);
+    opt.textContent = labeler(value);
+    select.appendChild(opt);
+  }
+}
+
+function fillSpecCaseOptions(){
+  if (!app.chunk || !el.pickCase) return;
+  const selected = el.pickCase.value;
+  fillSimpleSelect(el.pickCase, [...app.chunk.records].sort((a,b) => caseNum(a) - caseNum(b)).map(r => r.case));
+  if ([...el.pickCase.options].some(o => o.value === selected)) el.pickCase.value = selected;
+}
+
+function syncSpecControls(rec){
+  if (!rec) return;
+  el.pickL.value = String(rec.span);
+  el.pickProfile.value = rec.profile;
+  el.pickGrade.value = rec.grade;
+  el.pickCase.value = rec.case;
+}
+
+function selectOpeningFromSliders(changed){
+  const dOpts = doOptions();
+  const sOpts = shOptions();
+  let dIndex = Number(el.slDo.value);
+  let sIndex = Number(el.slSh.value);
+
+  if (dIndex === 0 && sIndex === 0){
+    selectCase('C100');
+    return;
+  }
+
+  if (changed === 'do' && dIndex === 0){
+    el.slSh.value = 0;
+    selectCase('C100');
+    return;
+  }
+  if (changed === 'sh' && sIndex === 0){
+    el.slDo.value = 0;
+    selectCase('C100');
+    return;
+  }
+
+  if (dIndex === 0){
+    dIndex = 1;
+    el.slDo.value = dIndex;
+  }
+  if (sIndex === 0){
+    sIndex = 1;
+    el.slSh.value = sIndex;
+  }
+
+  selectCase(caseFromOpening(dOpts[dIndex], sOpts[sIndex]));
+}
+
+function selectCase(caseId){
+  const rec = app.chunk.records.find(r => r.case === caseId) || app.chunk.records[0];
+  app.selected = rec;
+  el.caseSelect.value = rec.case;
+  for (const td of el.caseMatrix.querySelectorAll('.case-cell')){
+    td.classList.toggle('sel', td.dataset.case === rec.case);
+  }
+  setOpeningSlidersForRecord(rec);
+  syncSpecControls(rec);
+  updateSelected();
+}
+
+function badge(text, kind){
+  return `<span class="badge ${kind}">${text}</span>`;
+}
+
+function branchText(value){
+  return value === 'buckling' ? 'buckling/degrading' : 'non-buckling/non-degrading';
+}
+
+function responseTitle(){
+  if (app.showHysteresis && app.showBackbone) return 'Cyclic response and FE backbone';
+  if (app.showBackbone) return 'FE backbone';
+  return 'Cyclic moment-rotation';
+}
+
+function updateSelected(){
+  const r = app.selected;
+  if (!r) return;
+  el.plotTitle.textContent = `${responseTitle()} response: ${r.model}`;
+  el.plotSub.textContent = `${r.profile}, ${r.grade}, 2L/h = ${r.span}, do/h = ${fmt(r.do_h,2)}, S/h = ${fmt(r.S_h,1)}`;
+  const branchKind = r.branch_calibrated === r.branch_predicted ? 'good' : 'bad';
+  el.branchBox.innerHTML = app.mode === 'ml'
+    ? `
+      <div class="row"><span>Calibrated branch</span>${badge(branchText(r.branch_calibrated), r.branch_calibrated === 'buckling' ? 'warn' : 'good')}</div>
+      <div class="row" style="margin-top:5px;"><span>Predicted branch</span>${badge(branchText(r.branch_predicted), branchKind)}</div>
+      <div class="small muted" style="margin-top:7px;">${r.validation ? 'Held-out validation record' : 'Training record'}; full hysteresis points ${r.curves.points_full}.</div>
+    `
+    : `
+      <div class="row"><span>Calibrated branch</span>${badge(branchText(r.branch_calibrated), r.branch_calibrated === 'buckling' ? 'warn' : 'good')}</div>
+      <div class="small muted" style="margin-top:7px;">${r.validation ? 'Held-out validation record' : 'Training record'}; full hysteresis points ${r.curves.points_full}.</div>
+    `;
+  el.mCalR.textContent = fmt(r.metrics.calibrated_vs_FE.R, 5);
+  el.mPredR.textContent = fmt(r.metrics.predicted_vs_FE.R, 5);
+  el.mCalRmse.textContent = `${fmt(r.metrics.calibrated_vs_FE.RMSE, 2)} kN m`;
+  el.mPredRmse.textContent = `${fmt(r.metrics.predicted_vs_FE.RMSE, 2)} kN m`;
+  for (const node of [el.mPredR.closest('.metricBox'), el.mPredRmse.closest('.metricBox')]){
+    if (node) node.style.display = app.mode === 'ml' ? '' : 'none';
+  }
+  el.modelName.textContent = r.model;
+  el.valCase.textContent = r.case;
+  el.geomLine.innerHTML = `<span class="sym"><i>h</i></span> = ${fmt(r.h_mm,0)} mm, <span class="sym"><i>b</i></span> = ${fmt(r.b_mm,0)} mm, <span class="sym"><i>t</i><sub>w</sub></span> = ${fmt(r.tw_mm,2)} mm, <span class="sym"><i>t</i><sub>f</sub></span> = ${fmt(r.tf_mm,2)} mm, <span class="sym"><i>f</i><sub>y</sub></span> = ${fmt(r.fy_MPa,0)} MPa`;
+  el.mpLine.innerHTML = `<span class="sym"><i>M</i><sub>p</sub></span> = ${fmt(r.Mp_kNm,2)} kN m; <span class="sym"><i>d</i><sub>o</sub>/<i>h</i></span> = ${fmt(r.do_h,2)}; <span class="sym"><i>S</i>/<i>h</i></span> = ${fmt(r.S_h,1)}; ${r.validation ? badge('validation','warn') : badge('training','good')}`;
+  renderLabelTable();
+  updateContours();
+  renderLegend();
+  renderPlot();
+}
+
+function rowsHtml(rows){
+  return rows.map(([k,v]) => `<tr><td>${k}</td><td>${fmtSmart(v)}</td></tr>`).join('');
+}
+
+function updateContours(){
+  const r = app.selected;
+  if (!r || !r.contours) return;
+  el.imgVonMises.src = r.contours.VonMises;
+  el.imgPEEQ.src = r.contours.PEEQ;
+  el.linkVonMises.href = r.contours.VonMises;
+  el.linkPEEQ.href = r.contours.PEEQ;
+  el.imgVonMises.onclick = () => window.open(r.contours.VonMises, '_blank', 'noopener');
+  el.imgPEEQ.onclick = () => window.open(r.contours.PEEQ, '_blank', 'noopener');
+}
+
+function renderLabelTable(){
+  const r = app.selected;
+  const head = el.labelTable.parentElement.querySelector('thead');
+  if (head){
+    head.innerHTML = app.mode === 'ml'
+      ? '<tr><th>Quantity</th><th>Calibrated</th><th>Predicted</th></tr>'
+      : '<tr><th>Quantity</th><th>Calibrated</th></tr>';
+  }
+  const labels = [
+    ['<i>K</i><sub>0</sub> norm','K0_norm'], ['<i>a</i><sub>s</sub>','as'], ['<i>&theta;</i><sub>p</sub>','theta_p'], ['<i>M</i><sub>y</sub> norm','My_norm'],
+    ['<i>&lambda;</i><sub>eq</sub>','lambda_eq'], ['<i>&theta;</i><sub>pc</sub>','theta_pc'], ['<i>&theta;</i><sub>u</sub>','theta_u']
+  ];
+  el.labelTable.innerHTML = labels.map(([label,key]) => `
+    <tr><td>${label}</td><td>${fmtSmart(r.paper_calibrated[key])}</td>${app.mode === 'ml' ? `<td>${fmtSmart(r.paper_predicted[key])}</td>` : ''}</tr>
+  `).join('');
+}
+
+function renderLegend(){
+  const items = [
+    {key:'showFE', label:'FE hysteretic curve', color:'var(--fe)'},
+    ...(app.mode === 'fe' ? [{key:'showBackbone', label:'FE backbone envelope', color:'var(--fe)'}] : []),
+    {key:'showCal', label:'Calibrated mIK curve', color:'var(--cal)'},
+    ...(app.mode === 'ml' ? [{key:'showPred', label:'Predicted mIK curve', color:'var(--pred)'}] : [])
+  ];
+  el.legend.innerHTML = items.map(item => `
+    <div class="legitem ${app[item.key] ? 'active' : ''}" data-key="${item.key}">
+      <span class="swatch" style="background:${item.color}"></span>${item.label}
+    </div>
+  `).join('');
+  for (const node of el.legend.querySelectorAll('.legitem')){
+    node.addEventListener('click', () => {
+      app[node.dataset.key] = !app[node.dataset.key];
+      syncToggleButtons();
+      renderLegend();
+      renderPlot();
+    });
+  }
+  if (el.curveStackStatus){
+    const added = app.addedCurves.map(c => `<span class="mono">${c.model}</span>`).join(', ');
+    el.curveStackStatus.innerHTML = added
+      ? `Primary curve follows the selected model. Added comparison curve${app.addedCurves.length > 1 ? 's' : ''}: ${added}.`
+      : 'Primary curve follows the selected model. Use Add curve to pin the current model, then select another model for comparison.';
+  }
+}
+
+function syncToggleButtons(){
+  el.btnModeFe.classList.toggle('active', app.mode === 'fe');
+  el.btnModeMl.classList.toggle('active', app.mode === 'ml');
+  el.modeStatus.textContent = app.mode === 'fe'
+    ? 'FE benchmark mode compares the FE hysteretic response with the calibrated mIK reconstruction.'
+    : 'ML prediction mode compares FE hysteresis with calibrated and predicted mIK hysteretic response. FE backbone is unavailable in this mode.';
+  el.btnPlotHys.hidden = app.mode === 'ml';
+  el.btnPlotBackbone.hidden = app.mode === 'ml';
+  el.btnPlotHys.textContent = `Hysteresis: ${app.showHysteresis ? 'on' : 'off'}`;
+  el.btnPlotBackbone.textContent = app.mode === 'ml' ? 'FE backbone: unavailable' : `FE backbone: ${app.showBackbone ? 'on' : 'off'}`;
+  el.btnPlotHys.classList.toggle('primary', app.showHysteresis);
+  el.btnPlotBackbone.classList.toggle('primary', app.mode !== 'ml' && app.showBackbone);
+  el.btnPlotBackbone.disabled = app.mode === 'ml';
+  el.btnFE.textContent = `FE: ${app.showFE ? 'on' : 'off'}`;
+  el.btnCal.textContent = `Calibrated mIK: ${app.showCal ? 'on' : 'off'}`;
+  el.btnPred.textContent = `Predicted mIK: ${app.showPred ? 'on' : 'off'}`;
+  el.btnFE.classList.toggle('primary', app.showFE);
+  el.btnCal.classList.toggle('primary', app.showCal);
+  el.btnPred.classList.toggle('primary', app.showPred);
+  el.btnFE.disabled = false;
+  el.btnPred.hidden = app.mode === 'fe';
+  el.btnPred.disabled = app.mode === 'fe';
+  el.btnClearCurves.classList.toggle('primary', app.addedCurves.length > 0);
+}
+
+function setMode(mode){
+  app.mode = mode;
+  if (mode === 'ml'){
+    app.showHysteresis = true;
+    app.showBackbone = false;
+    app.showFE = true;
+    app.showCal = true;
+    app.showPred = true;
+  } else {
+    app.showHysteresis = true;
+    app.showFE = true;
+    app.showCal = true;
+    app.showPred = false;
+  }
+  syncToggleButtons();
+  renderLegend();
+  updateSelected();
+}
+
+function togglePlotSource(kind){
+  if (kind === 'backbone' && app.mode === 'ml') return;
+  if (kind === 'hysteresis') app.showHysteresis = !app.showHysteresis;
+  if (kind === 'backbone') app.showBackbone = !app.showBackbone;
+  if (!app.showHysteresis && !app.showBackbone){
+    if (kind === 'hysteresis' && app.mode !== 'ml') app.showBackbone = true;
+    else app.showHysteresis = true;
+  }
+  syncToggleButtons();
+  updateSelected();
+}
+
+function addCurve(){
+  const r = app.selected;
+  if (!r) return;
+  if (!app.addedCurves.some(c => c.model === r.model)){
+    app.addedCurves.push(r);
+  }
+  syncToggleButtons();
+  renderLegend();
+  renderPlot();
+}
+
+function clearAddedCurves(){
+  app.addedCurves = [];
+  syncToggleButtons();
+  renderLegend();
+  renderPlot();
+}
+
+function renderPlot(){
+  clearSvg();
+  const r = app.selected;
+  if (!r) return;
+  const W = 760, H = 440;
+  const margin = {left:72, right:24, top:24, bottom:58};
+  const innerW = W - margin.left - margin.right;
+  const innerH = H - margin.top - margin.bottom;
+  const records = [{rec:r, role:'selected', modelIndex:0}, ...app.addedCurves.map((rec, i) => ({rec, role:'added', modelIndex:i + 1}))];
+  const sourceDefs = [];
+  if (app.showHysteresis) sourceDefs.push({key:'curves', label:'hysteresis', width:1.0, dash:null, opacity:0.72});
+  if (app.mode === 'fe' && app.showBackbone) sourceDefs.push({key:'backbone', label:'FE backbone', width:2.0, dash:'8 4', opacity:1.0});
+  const outputDefs = [
+    {enabled:app.showFE, key:'FE', label:'FE', color:'#6aaee6'},
+    {enabled:app.showCal, key:'calibrated_IMKBilin', label:'calibrated mIK', color:'#f97316'},
+    {enabled:app.mode === 'ml' && app.showPred, key:'predicted_IMKBilin', label:'predicted mIK', color:'#111827'}
+  ];
+  const lines = [];
+  for (const item of records){
+    for (const srcDef of sourceDefs){
+      const source = item.rec[srcDef.key];
+      if (!source || !source.theta) continue;
+      for (const out of outputDefs){
+        if (srcDef.key === 'backbone'){
+          if (out.key !== 'FE') continue;
+        } else if (!out.enabled) {
+          continue;
+        }
+        if (!source[out.key]) continue;
+        const isAdded = item.role === 'added';
+        lines.push({
+          model:item.rec.model,
+          label:`${item.rec.model} ${out.label} ${srcDef.label}`,
+          x:source.theta,
+          y:source[out.key],
+          color:out.color,
+          width:srcDef.width + (out.key === 'FE' ? 0 : 0.25),
+          dash:isAdded ? (srcDef.key === 'backbone' ? '2 4 10 4' : '5 5') : srcDef.dash,
+          opacity:isAdded ? 0.62 : srcDef.opacity
+        });
+      }
+    }
+  }
+  const xs = lines.flatMap(c => c.x);
+  const ys = lines.flatMap(c => c.y);
+  if (!lines.length || !ys.length || !xs.length){
+    el.svg.appendChild(svgEl('text', {x:W/2,y:H/2,'text-anchor':'middle','font-size':14,fill:'#475569'})).textContent = 'No visible curve selected';
+    return;
+  }
+  const xmin = -0.06;
+  const xmax = 0.06;
+  const maxMoment = Math.max(...ys.map(v => Math.abs(Number(v) || 0)), 1);
+  const yStep = niceStep(maxMoment, 4);
+  const yLimit = Math.max(yStep, Math.ceil(maxMoment / yStep) * yStep);
+  const ymin = -yLimit;
+  const ymax = yLimit;
+  const yTicks = [];
+  for (let v = ymin; v <= ymax + yStep * 0.001; v += yStep) yTicks.push(Math.abs(v) < yStep * 1e-6 ? 0 : v);
+  const xTicks = [-0.06, -0.04, -0.02, 0, 0.02, 0.04, 0.06];
+  const sx = v => margin.left + (v - xmin) / (xmax - xmin) * innerW;
+  const sy = v => margin.top + innerH - (v - ymin) / (ymax - ymin) * innerH;
+  const g = svgEl('g');
+  el.svg.appendChild(g);
+  const clipId = 'plotClip';
+  const defs = svgEl('defs');
+  const clip = svgEl('clipPath', {id:clipId});
+  clip.appendChild(svgEl('rect', {x:margin.left,y:margin.top,width:innerW,height:innerH}));
+  defs.appendChild(clip);
+  g.appendChild(defs);
+  g.appendChild(svgEl('rect', {x:margin.left,y:margin.top,width:innerW,height:innerH,fill:'#fff'}));
+  for (const val of yTicks){
+    const yy = sy(val);
+    g.appendChild(svgEl('line', {x1:margin.left,y1:yy,x2:margin.left+innerW,y2:yy,stroke:'#e5e7eb','stroke-width':1}));
+    const t = svgEl('text', {x:margin.left-8,y:yy+4,'text-anchor':'end','font-size':11,fill:'#475569'});
+    t.textContent = axisNumber(val);
+    g.appendChild(t);
+  }
+  for (const val of xTicks){
+    const xx = sx(val);
+    g.appendChild(svgEl('line', {x1:xx,y1:margin.top,x2:xx,y2:margin.top+innerH,stroke:'#eef2f7','stroke-width':1}));
+    const t = svgEl('text', {x:xx,y:margin.top+innerH+20,'text-anchor':'middle','font-size':11,fill:'#475569'});
+    t.textContent = axisNumber(val,2);
+    g.appendChild(t);
+  }
+  if (xmin < 0 && xmax > 0) g.appendChild(svgEl('line', {x1:sx(0),y1:margin.top,x2:sx(0),y2:margin.top+innerH,stroke:'#94a3b8','stroke-width':1}));
+  if (ymin < 0 && ymax > 0) g.appendChild(svgEl('line', {x1:margin.left,y1:sy(0),x2:margin.left+innerW,y2:sy(0),stroke:'#94a3b8','stroke-width':1}));
+  g.appendChild(svgEl('rect', {x:margin.left,y:margin.top,width:innerW,height:innerH,fill:'none',stroke:'#111827','stroke-width':1.2}));
+  const curveLayer = svgEl('g', {'clip-path':`url(#${clipId})`});
+  g.appendChild(curveLayer);
+  for (const c of lines){
+    let d = '';
+    for (let i=0;i<c.x.length;i++){
+      const px = sx(c.x[i]), py = sy(c.y[i]);
+      d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ' ' + py.toFixed(2) + ' ';
+    }
+    const attrs = {d, fill:'none', stroke:c.color, 'stroke-width':c.width, 'stroke-linejoin':'round', 'stroke-linecap':'round', opacity:c.opacity};
+    if (c.dash) attrs['stroke-dasharray'] = c.dash;
+    curveLayer.appendChild(svgEl('path', attrs));
+  }
+  const xLab = svgEl('text', {x:margin.left+innerW/2,y:H-18,'text-anchor':'middle','font-size':13,fill:'#111827'});
+  xLab.textContent = 'Rotation, theta (rad)';
+  g.appendChild(xLab);
+  const yLab = svgEl('text', {x:18,y:margin.top+innerH/2,transform:`rotate(-90 18 ${margin.top+innerH/2})`,'text-anchor':'middle','font-size':13,fill:'#111827'});
+  yLab.textContent = 'Moment, M (kN m)';
+  g.appendChild(yLab);
+}
+
+function download(filename, blob){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  URL.revokeObjectURL(a.href);
+  a.remove();
+}
+
+function exportSvg(){
+  const xml = new XMLSerializer().serializeToString(el.svg);
+  const kind = `${app.showHysteresis ? 'hysteresis' : ''}${app.showHysteresis && app.showBackbone ? '_and_' : ''}${app.showBackbone ? 'backbone' : ''}`;
+  download(`${app.selected ? app.selected.model : 'rws'}_${kind || 'response'}.svg`, new Blob([xml], {type:'image/svg+xml'}));
+}
+
+function exportPng(){
+  const xml = new XMLSerializer().serializeToString(el.svg);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1520;
+    canvas.height = 880;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    const kind = `${app.showHysteresis ? 'hysteresis' : ''}${app.showHysteresis && app.showBackbone ? '_and_' : ''}${app.showBackbone ? 'backbone' : ''}`;
+    canvas.toBlob(blob => download(`${app.selected ? app.selected.model : 'rws'}_${kind || 'response'}.png`, blob), 'image/png');
+  };
+  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml)));
+}
+
+function initControls(){
+  el.slProfile.max = app.manifest.profiles.length - 1;
+  el.slGrade.max = app.manifest.grades.length - 1;
+  el.slSpan.max = app.manifest.spans.length - 1;
+  el.slDo.max = app.manifest.do_h_values.length - 1;
+  el.slSh.max = app.manifest.S_h_values.length - 1;
+  el.minProfile.textContent = app.manifest.profiles[0];
+  el.maxProfile.textContent = app.manifest.profiles[app.manifest.profiles.length - 1];
+  el.minGrade.textContent = app.manifest.grades[0];
+  el.maxGrade.textContent = app.manifest.grades[app.manifest.grades.length - 1];
+  el.minSpan.textContent = app.manifest.spans[0];
+  el.maxSpan.textContent = app.manifest.spans[app.manifest.spans.length - 1];
+  el.minDo.textContent = pct(app.manifest.do_h_values[0]);
+  el.maxDo.textContent = pct(app.manifest.do_h_values[app.manifest.do_h_values.length - 1]);
+  el.minSh.textContent = pct(app.manifest.S_h_values[0]);
+  el.maxSh.textContent = pct(app.manifest.S_h_values[app.manifest.S_h_values.length - 1]);
+  fillSimpleSelect(el.pickL, app.manifest.spans);
+  fillSimpleSelect(el.pickProfile, app.manifest.profiles);
+  fillSimpleSelect(el.pickGrade, app.manifest.grades);
+  buildCaseMatrix();
+}
+
+async function loadFromSpec(){
+  const profileIndex = app.manifest.profiles.indexOf(el.pickProfile.value);
+  const gradeIndex = app.manifest.grades.indexOf(el.pickGrade.value);
+  const spanIndex = app.manifest.spans.map(String).indexOf(String(el.pickL.value));
+  if (profileIndex >= 0) el.slProfile.value = profileIndex;
+  if (gradeIndex >= 0) el.slGrade.value = gradeIndex;
+  if (spanIndex >= 0) el.slSpan.value = spanIndex;
+  const targetCase = el.pickCase.value || 'C100';
+  await loadChunk(targetCase);
+}
+
+function bindEvents(){
+  for (const sl of [el.slProfile, el.slGrade, el.slSpan]){
+    const handler = () => loadChunk(app.selected ? app.selected.case : null).catch(showError);
+    sl.addEventListener('input', handler);
+    sl.addEventListener('change', handler);
+  }
+  el.slDo.addEventListener('input', () => selectOpeningFromSliders('do'));
+  el.slDo.addEventListener('change', () => selectOpeningFromSliders('do'));
+  el.slSh.addEventListener('input', () => selectOpeningFromSliders('sh'));
+  el.slSh.addEventListener('change', () => selectOpeningFromSliders('sh'));
+  el.caseSelect.addEventListener('change', () => selectCase(el.caseSelect.value));
+  el.btnFull.addEventListener('click', () => selectCase('C100'));
+  el.btnReset.addEventListener('click', () => {
+    app.showHysteresis = true;
+    app.showBackbone = false;
+    app.showCal = true;
+    app.showPred = app.mode === 'ml';
+    app.showFE = true;
+    app.addedCurves = [];
+    syncToggleButtons();
+    renderLegend();
+    renderPlot();
+  });
+  for (const sel of [el.pickL, el.pickProfile, el.pickGrade]) sel.addEventListener('change', () => loadFromSpec().catch(showError));
+  el.pickCase.addEventListener('change', () => selectCase(el.pickCase.value));
+  el.btnModeFe.addEventListener('click', () => setMode('fe'));
+  el.btnModeMl.addEventListener('click', () => setMode('ml'));
+  el.btnPlotHys.addEventListener('click', () => togglePlotSource('hysteresis'));
+  el.btnPlotBackbone.addEventListener('click', () => togglePlotSource('backbone'));
+  el.btnFE.addEventListener('click', () => { app.showFE = !app.showFE; syncToggleButtons(); renderLegend(); renderPlot(); });
+  el.btnCal.addEventListener('click', () => { app.showCal = !app.showCal; syncToggleButtons(); renderLegend(); renderPlot(); });
+  el.btnPred.addEventListener('click', () => { if (app.mode === 'fe') return; app.showPred = !app.showPred; syncToggleButtons(); renderLegend(); renderPlot(); });
+  el.btnAddCurve.addEventListener('click', addCurve);
+  el.btnClearCurves.addEventListener('click', clearAddedCurves);
+  el.btnSvg.addEventListener('click', exportSvg);
+  el.btnPng.addEventListener('click', exportPng);
+}
+
+function showError(err){
+  console.error(err);
+  el.chunkStatus.innerHTML = `<span style="color:#dc2626;font-weight:700">${err.message || err}</span>`;
+}
+
+async function init(){
+  try{
+    const response = await fetch('data/manifest.json?v=20260515_axis_v1');
+    if (!response.ok) throw new Error('Could not load data/manifest.json');
+    app.manifest = await response.json();
+    initControls();
+    bindEvents();
+    syncToggleButtons();
+    await loadChunk();
+  }catch(err){
+    showError(err);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

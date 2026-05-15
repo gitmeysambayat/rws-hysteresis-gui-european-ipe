@@ -1,0 +1,4 @@
+*.zip
+gui_preview_*.png
+Thumbs.db
+.DS_Store

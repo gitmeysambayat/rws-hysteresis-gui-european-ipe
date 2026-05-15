@@ -1,0 +1,18 @@
+Standalone preview package for the European RWS hysteresis FE-ML GUI.
+
+Repo root should contain:
+- index.html
+- data/manifest.json
+- data/chunks/*.json
+- contours/PEEQ/**/*.png
+- contours/VonMises/**/*.png
+- assets/3DMBC_logo.png
+- assets/city-st-georges-responsive-logo.svg
+- .nojekyll
+- README.md
+
+Recommended preview repo name:
+rws-hysteresis-gui-european-preview
+
+GitHub Pages:
+Enable Pages from the repository root. The chunked JSON files are loaded by the browser through normal fetch() requests.
